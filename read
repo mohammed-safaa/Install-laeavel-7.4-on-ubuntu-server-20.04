@@ -1,0 +1,241 @@
+Install laeavel 7.4 on ubuntu server  20.04
+
+
+    • login ssh
+      
+      ssh mohammedsafaa@192.168.250.242
+      
+       error
+  ssh-keygen -f "/home/mohammed/.ssh/known_hosts" -R "192.168.250.242"
+ECDSA host key for 192.168.250.242 has changed and you have requested strict checking.
+Host key verification failed.
+
+      sudo rm /home/mohammed/.ssh/known_hosts
+
+    • install cockpit
+
+sudo apt update
+
+sudo apt install cockpit -y
+
+
+
+
+    • install lamp
+
+
+sudo nano /etc/php/7.4/apache2/php.ini
+
+max_execution_time = 600
+max_input_time = 1000
+memory_limit = 256MB
+upload_max_filesize = 9000000M
+post_max_size = 9000000M
+max_file_uploads = 100
+
+
+sudo nano /etc/apache2/mods-enabled/dir.conf
+
+<IfModule mod_dir.c>
+    DirectoryIndex index.php index.html index.cgi index.pl index.xhtml index.htm
+</IfModule>
+
+service apache2 restart
+
+
+
+
+
+
+
+
+
+
+
+      
+    • install php7.4*
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:ondrej/php
+
+sudo apt update
+
+sudo apt install php libapache2-mod-php php-mbstring php-xmlrpc php-soap php-gd php-xml php-cli php-zip php-bcmath php-tokenizer php-json php-pear
+
+sudo apt-get update
+
+sudo apt-get install apache2 libapache2-mod-php
+
+
+
+
+    • install Mysql 
+
+sudo apt update
+
+sudo apt-get install mysql-server php-mysql
+
+sudo systemctl start mysql.service
+
+sudo mysql_secure_installation
+
+Securing the MySQL server deployment.
+
+Connecting to MySQL using a blank password.
+
+VALIDATE PASSWORD COMPONENT can be used to test passwords
+and improve security. It checks the strength of password
+and allows the users to set only those passwords which are
+secure enough. Would you like to setup VALIDATE PASSWORD component?
+
+Press y|Y for Yes, any other key for No:  y
+
+There are three levels of password validation policy:
+
+LOW    Length >= 8
+MEDIUM Length >= 8, numeric, mixed case, and special characters
+STRONG Length >= 8, numeric, mixed case, special characters and dictionary                  file
+
+Please enter 0 = LOW, 1 = MEDIUM and 2 = STRONG: 0
+
+Estimated strength of the password: 25 
+Do you wish to continue with the password provided?(Press y|Y for Yes, any other key for No) : 
+
+
+
+
+
+
+
+
+
+
+
+USE mysql;
+SHOW VARIABLES LIKE 'validate_password%';
+SHOW VARIABLES LIKE 'validate_password%';
+
+
++--------------------------------------+--------+
+| Variable_name                        | Value  |
++--------------------------------------+--------+
+| validate_password.check_user_name    | ON     |
+| validate_password.dictionary_file    |        |
+| validate_password.length             | 8      |
+| validate_password.mixed_case_count   | 1      |
+| validate_password.number_count       | 1      |
+| validate_password.policy             | MEDIUM |
+| validate_password.special_char_count | 1      |
+
+
+
+
+
+
+
+install plugin validate_password soname'validate_password.so';
+
+select plugin_name, plugin_status from information_schema.plugins where plugin_name like 'validate%';
+
+
+
++-------------------+---------------+
+| plugin_name       | plugin_status |
++-------------------+---------------+
+| validate_password | ACTIVE        |
+
+
+
+SET GLOBAL validate_password_policy=LOW;
+
+or
+
+SET GLOBAL validate_password_policy=0;
+
+
+
+SHOW VARIABLES LIKE 'validate_password%';
+
+
+
+لازم يكون الباسورد يحتوي على هاش وعلامة سوال وحروك كبيره وصغير
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by 'Ms66313?#';
+
+
+
+
+
+    • install phpmyadmin
+sudo apt install php-mbstring php-zip php-gd php-json php-curl
+
+    • install laravel 
+
+
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+sudo chmod +x /usr/local/bin/composer
+
+cd /var/www/html/laravel
+sudo composer install
+
+sudo chown -R www-data.www-data /var/www/html/laravel
+sudo chmod -R 755 /var/www/html/laravel
+sudo chmod -R 777 /var/www/html/laravel/storage
+
+
+sudo nano /etc/apache2/sites-enabled/000-default.conf
+
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/html/laravel/public
+
+        <Directory />
+                Options FollowSymLinks
+                AllowOverride None
+        </Directory>
+        <Directory /var/www/html/laravel>
+                AllowOverride All
+        </Directory>
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+</VirtualHost>
+
+
+sudo service apache2 restart
+
+cd /etc/apache2/sites-enabled/
+sudo a2enmod rewrite   
+
+systemctl restart apache2
+
+
+
+
+move files on server
+
+scp -r /home/mohammed/Pictures/laravel mohammedsafaa@192.168.250.242:/var/www/html/
+
+php artisan storage:link
+
+
+
+
+cd /var/www/html/laravel
+
+sudo composer update
+
+composer require doctrine/dbal
+
+composer self-update
+
+I found out what the problem was... Somehow my symlink didn't work correctly. The uploads were only in my storage/app/public and not in my public/storage folder, i deleted the public/storage folder and made a new symlink.
+
+حل مشكلة عدم ظهور الصور على السيرفر الرئيسي
+cd /var/www/html/laravel
+
+rm -rf public/storage
+
+php artisan storage:link
+
